@@ -13,32 +13,29 @@
         
         .status-bar { background: rgba(0, 200, 83, 0.1); border: 1px solid rgba(0, 200, 83, 0.3); padding: 10px; text-align: center; color: #00C853; font-size: 13px; margin: 15px; border-radius: 8px; }
         
-        .card { background: #141414; border: 1px solid #333; border-radius: 12px; margin: 15px; padding: 15px; position: relative; overflow: hidden; }
+        .card { background: #141414; border: 1px solid #333; border-radius: 12px; margin: 15px; padding: 15px; }
+        .pair-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #222; }
+        .pair-name { font-size: 22px; font-weight: 900; color: #FFD700; }
         
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .pair { font-size: 22px; font-weight: 900; color: #FFD700; }
-        .badge { padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; }
+        /* Individual Setup Block */
+        .setup-block { background: #0a0a0a; border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #222; }
+        .setup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .tf-badge { background: #222; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }
+        .dir-badge { padding: 4px 10px; border-radius: 4px; font-weight: 800; font-size: 12px; }
         .buy { background: #00C853; color: #000; }
         .sell { background: #FF1744; color: #fff; }
         
-        .timer-bar { height: 4px; background: #333; border-radius: 2px; margin-bottom: 15px; overflow: hidden; }
-        .timer-fill { height: 100%; background: #FFD700; width: 100%; transition: width 1s linear; }
-        .timer-text { font-size: 11px; color: #888; text-align: right; margin-top: -12px; margin-bottom: 10px; }
-        
-        .tf-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .tf-box { background: #0a0a0a; padding: 10px; border-radius: 8px; text-align: center; }
-        .tf-name { font-size: 10px; color: #666; margin-bottom: 4px; }
-        .tf-dir { font-size: 14px; font-weight: 800; }
-        .tf-dir.buy { color: #00C853; }
-        .tf-dir.sell { color: #FF1744; }
-        .tf-dir.neutral { color: #666; }
-        
-        .prices { display: flex; justify-content: space-between; background: #0a0a0a; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .prices { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .price-col { text-align: center; flex: 1; }
-        .price-label { font-size: 10px; color: #888; text-transform: uppercase; }
-        .price-val { font-size: 14px; font-weight: 700; margin-top: 4px; }
+        .price-label { font-size: 9px; color: #666; text-transform: uppercase; margin-bottom: 2px; }
+        .price-val { font-size: 13px; font-weight: 700; }
         
-        .tv-btn { display: block; width: 100%; background: #1DA1F2; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; }
+        .timer-container { display: flex; align-items: center; gap: 10px; }
+        .timer-bar { flex: 1; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+        .timer-fill { height: 100%; background: #FFD700; width: 100%; transition: width 1s linear; }
+        .timer-text { font-size: 11px; color: #888; font-weight: 700; min-width: 40px; text-align: right; }
+        
+        .tv-btn { display: block; width: 100%; background: #1DA1F2; color: white; text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 13px; margin-top: 10px; }
         
         .loading { text-align: center; padding: 40px; color: #888; }
     </style>
@@ -58,7 +55,7 @@
         async function fetchSignals() {
             try {
                 // ⚠️ REPLACE WITH YOUR ACTUAL RENDER URL
-                const res = await fetch('https://fx-app-2.onrender.com/signals'); 
+                const res = await fetch('https://YOUR-RENDER-URL.onrender.com/signals'); 
                 const signals = await res.json();
                 renderSignals(signals);
             } catch (e) {
@@ -72,58 +69,56 @@
             
             if (!signals || signals.length === 0) {
                 status.innerHTML = '⏳ No high-confluence setups right now.';
-                container.innerHTML = '<div class="loading">AI is scanning 15 markets across 3 timeframes...</div>';
+                container.innerHTML = '<div class="loading">AI is scanning 15 markets across M15, H1, H4...</div>';
                 return;
             }
             
-            status.innerHTML = `✅ ${signals.length} Active Setups Found`;
+            status.innerHTML = `✅ ${signals.length} Active Pairs Found`;
             let html = '';
+            let setupCounter = 0;
             
-            signals.forEach((s, index) => {
-                const isBuy = s.main_direction === 'BUY';
-                const tvSymbol = tvMap[s.pair] || s.pair;
+            signals.forEach(s => {
+                html += `<div class="card"><div class="pair-header"><div class="pair-name">${s.pair}</div></div>`;
                 
-                // Build Timeframe Matrix
-                let tfHtml = '';
-                ['M15', 'H1', 'H4'].forEach(tf => {
-                    const setup = s.setups.find(x => x.timeframe === tf);
-                    let dir = '—', dirClass = 'neutral', rsi = '';
-                    if (setup) {
-                        dir = setup.direction;
-                        dirClass = setup.direction.toLowerCase();
-                        rsi = `RSI:${setup.rsi}`;
-                    }
-                    tfHtml += `<div class="tf-box"><div class="tf-name">${tf}</div><div class="tf-dir ${dirClass}">${dir}</div><div class="tf-name">${rsi}</div></div>`;
+                s.setups.forEach(setup => {
+                    const isBuy = setup.direction === 'BUY';
+                    const tvSymbol = tvMap[s.pair] || s.pair;
+                    const uniqueId = `setup-${setupCounter}`;
+                    
+                    html += `
+                        <div class="setup-block" id="block-${uniqueId}">
+                            <div class="setup-header">
+                                <div class="tf-badge">${setup.timeframe}</div>
+                                <div class="dir-badge ${isBuy ? 'buy' : 'sell'}">${setup.direction}</div>
+                            </div>
+                            
+                            <div class="prices">
+                                <div class="price-col"><div class="price-label">Entry</div><div class="price-val" style="color:#FFD700">${setup.entry}</div></div>
+                                <div class="price-col"><div class="price-label">Stop Loss</div><div class="price-val" style="color:#FF1744">${setup.stopLoss}</div></div>
+                                <div class="price-col"><div class="price-label">Take Profit</div><div class="price-val" style="color:#00C853">${setup.takeProfit}</div></div>
+                            </div>
+                            
+                            <div class="timer-container">
+                                <div class="timer-bar"><div class="timer-fill" id="fill-${uniqueId}"></div></div>
+                                <div class="timer-text" id="time-${uniqueId}">15:00</div>
+                            </div>
+                            
+                            <a href="https://www.tradingview.com/chart/?symbol=${tvSymbol}" target="_blank" class="tv-btn">📊 View Live Chart</a>
+                        </div>
+                    `;
+                    setupCounter++;
                 });
-
-                html += `
-                    <div class="card" id="card-${index}">
-                        <div class="card-header">
-                            <div class="pair">${s.pair}</div>
-                            <div class="badge ${isBuy ? 'buy' : 'sell'}">${s.main_direction}</div>
-                        </div>
-                        
-                        <div class="timer-bar"><div class="timer-fill" id="fill-${index}"></div></div>
-                        <div class="timer-text">Expires in <span id="time-${index}">15:00</span></div>
-                        
-                        <div class="tf-matrix">${tfHtml}</div>
-                        
-                        <div class="prices">
-                            <div class="price-col"><div class="price-label">Entry</div><div class="price-val" style="color:#FFD700">${s.entry}</div></div>
-                            <div class="price-col"><div class="price-label">Stop Loss</div><div class="price-val" style="color:#FF1744">${s.stopLoss}</div></div>
-                            <div class="price-col"><div class="price-label">Take Profit</div><div class="price-val" style="color:#00C853">${s.takeProfit}</div></div>
-                        </div>
-                        
-                        <a href="https://www.tradingview.com/chart/?symbol=${tvSymbol}" target="_blank" class="tv-btn">📊 View Live Chart</a>
-                    </div>
-                `;
+                
+                html += `</div>`;
             });
+            
             container.innerHTML = html;
-            startTimers(signals);
+            startTimers(setupCounter);
         }
 
-        function startTimers(signals) {
-            signals.forEach((s, index) => {
+        function startTimers(totalSetups) {
+            for (let i = 0; i < totalSetups; i++) {
+                const id = `setup-${i}`;
                 const expiresAt = new Date();
                 expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 min timer
                 
@@ -133,23 +128,23 @@
                     
                     if (diff <= 0) {
                         clearInterval(interval);
-                        const card = document.getElementById(`card-${index}`);
-                        if (card) card.style.opacity = '0.2'; // Fade out expired signals
-                        document.getElementById(`time-${index}`).innerText = "EXPIRED";
-                        document.getElementById(`fill-${index}`).style.width = "0%";
+                        const block = document.getElementById(`block-${id}`);
+                        if (block) block.style.opacity = '0.3';
+                        document.getElementById(`time-${id}`).innerText = "EXPIRED";
+                        document.getElementById(`fill-${id}`).style.width = "0%";
                         return;
                     }
                     
                     const mins = Math.floor(diff / 60000);
                     const secs = Math.floor((diff % 60000) / 1000);
-                    document.getElementById(`time-${index}`).innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
-                    document.getElementById(`fill-${index}`).style.width = `${(diff / 900000) * 100}%`;
+                    document.getElementById(`time-${id}`).innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    document.getElementById(`fill-${id}`).style.width = `${(diff / 900000) * 100}%`;
                 }, 1000);
-            });
+            }
         }
 
         fetchSignals();
-        setInterval(fetchSignals, 60000); // Refresh data every minute
+        setInterval(fetchSignals, 60000); 
     </script>
 </body>
 </html>
