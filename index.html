@@ -3,150 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
     <title>FX PRO</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; padding-bottom: 80px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #0a0a0a; color: #fff; padding-bottom: 20px; }
         
-        .header { background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); padding: 20px; text-align: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 28px; font-weight: 900; color: #FFD700; letter-spacing: 2px; }
-        .subtitle { font-size: 11px; color: #666; letter-spacing: 3px; margin-top: 5px; }
+        .header { background: #141414; padding: 20px; text-align: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 900; color: #FFD700; }
         
-        .status-bar { background: rgba(0, 200, 83, 0.1); border: 1px solid rgba(0, 200, 83, 0.3); padding: 12px 20px; text-align: center; font-size: 13px; font-weight: 600; color: #00C853; margin: 15px; border-radius: 8px; }
-        .status-bar.waiting { background: rgba(255, 165, 0, 0.1); border-color: rgba(255, 165, 0, 0.3); color: #FFA500; }
+        .status-bar { background: rgba(0, 200, 83, 0.1); border: 1px solid rgba(0, 200, 83, 0.3); padding: 10px; text-align: center; color: #00C853; font-size: 13px; margin: 15px; border-radius: 8px; }
         
-        .signal-card { background: #141414; border: 1px solid #333; border-radius: 12px; margin: 15px; padding: 20px; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: #141414; border: 1px solid #333; border-radius: 12px; margin: 15px; padding: 15px; position: relative; overflow: hidden; }
         
-        .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #222; }
-        .pair-name { font-size: 24px; font-weight: 900; color: #FFD700; }
-        .signal-badge { padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 14px; }
-        .signal-badge.buy { background: #00C853; color: #000; }
-        .signal-badge.sell { background: #FF1744; color: #fff; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .pair { font-size: 22px; font-weight: 900; color: #FFD700; }
+        .badge { padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; }
+        .buy { background: #00C853; color: #000; }
+        .sell { background: #FF1744; color: #fff; }
         
-        .price-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0a0a0a; border-radius: 8px; margin-bottom: 8px; }
-        .price-label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; }
-        .price-value { font-size: 18px; font-weight: 700; }
-        .price-value.entry { color: #FFD700; }
-        .price-value.sl { color: #FF1744; }
-        .price-value.tp { color: #00C853; }
+        .timer-bar { height: 4px; background: #333; border-radius: 2px; margin-bottom: 15px; overflow: hidden; }
+        .timer-fill { height: 100%; background: #FFD700; width: 100%; transition: width 1s linear; }
+        .timer-text { font-size: 11px; color: #888; text-align: right; margin-top: -12px; margin-bottom: 10px; }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .stat-box { background: #0a0a0a; padding: 12px; border-radius: 8px; text-align: center; }
-        .stat-label { font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-value { font-size: 16px; font-weight: 700; color: #fff; }
+        .tf-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .tf-box { background: #0a0a0a; padding: 10px; border-radius: 8px; text-align: center; }
+        .tf-name { font-size: 10px; color: #666; margin-bottom: 4px; }
+        .tf-dir { font-size: 14px; font-weight: 800; }
+        .tf-dir.buy { color: #00C853; }
+        .tf-dir.sell { color: #FF1744; }
+        .tf-dir.neutral { color: #666; }
         
-        .strategy-info { background: rgba(255, 215, 0, 0.05); border: 1px solid rgba(255, 215, 0, 0.2); padding: 15px; border-radius: 8px; margin-top: 15px; }
-        .strategy-title { font-size: 11px; color: #FFD700; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
-        .strategy-text { font-size: 13px; color: #aaa; line-height: 1.5; }
+        .prices { display: flex; justify-content: space-between; background: #0a0a0a; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .price-col { text-align: center; flex: 1; }
+        .price-label { font-size: 10px; color: #888; text-transform: uppercase; }
+        .price-val { font-size: 14px; font-weight: 700; margin-top: 4px; }
         
-        .tv-button { display: block; width: 100%; background: #1DA1F2; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; margin-top: 15px; font-size: 14px; }
+        .tv-btn { display: block; width: 100%; background: #1DA1F2; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; }
         
-        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
-        .empty-icon { font-size: 64px; margin-bottom: 20px; }
-        
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #141414; border-top: 1px solid #333; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-item { text-align: center; color: #666; font-size: 11px; font-weight: 600; padding: 5px 15px; cursor: pointer; }
-        .nav-item.active { color: #FFD700; }
-        .nav-icon { font-size: 20px; margin-bottom: 3px; }
-        
-        .loading { text-align: center; padding: 40px; color: #FFD700; }
-        .spinner { border: 3px solid #333; border-top: 3px solid #FFD700; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading { text-align: center; padding: 40px; color: #888; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">FX PRO</div>
-        <div class="subtitle">PROFESSIONAL TRADING</div>
-    </div>
-    
-    <div id="statusBar" class="status-bar waiting">⏳ Connecting to AI...</div>
-    
-    <div id="signalsContainer">
-        <div class="loading"><div class="spinner"></div><div>Loading live signals...</div></div>
-    </div>
-    
-    <div class="bottom-nav">
-        <div class="nav-item active"><div class="nav-icon">📊</div><div>Signals</div></div>
-        <div class="nav-item"><div class="nav-icon">📈</div><div>Charts</div></div>
-        <div class="nav-item"><div class="nav-icon">⚙️</div><div>Settings</div></div>
-    </div>
+    <div class="header"><div class="logo">FX PRO</div></div>
+    <div id="status" class="status-bar">⏳ Scanning 15 Markets...</div>
+    <div id="container"><div class="loading">Loading AI Engine...</div></div>
 
     <script>
-        // TradingView Symbol Map
         const tvMap = {
             'XAUUSD': 'OANDA:XAUUSD', 'EURUSD': 'OANDA:EURUSD', 'GBPUSD': 'OANDA:GBPUSD',
-            'BTCUSD': 'BINANCE:BTCUSDT', 'NAS100': 'NASDAQ:NDX'
+            'USDJPY': 'OANDA:USDJPY', 'BTCUSD': 'BINANCE:BTCUSDT', 'NAS100': 'NASDAQ:NDX',
+            'US30': 'DJ:DJI', 'USOIL': 'TVC:USOIL'
         };
 
         async function fetchSignals() {
             try {
-                // ⚠️ REPLACE THE URL BELOW WITH YOUR ACTUAL RENDER URL!
-                const response = await fetch('https://fx-app-2.onrender.com/signals'); 
-                const signals = await response.json();
+                // ⚠️ REPLACE WITH YOUR ACTUAL RENDER URL
+                const res = await fetch('https://YOUR-RENDER-URL.onrender.com/signals'); 
+                const signals = await res.json();
                 renderSignals(signals);
-            } catch (error) {
-                document.getElementById('statusBar').className = 'status-bar waiting';
-                document.getElementById('statusBar').innerHTML = '❌ Backend Disconnected. Retrying...';
+            } catch (e) {
+                document.getElementById('status').innerHTML = '❌ Backend Disconnected';
             }
         }
-        
+
         function renderSignals(signals) {
-            const container = document.getElementById('signalsContainer');
-            const statusBar = document.getElementById('statusBar');
+            const container = document.getElementById('container');
+            const status = document.getElementById('status');
             
             if (!signals || signals.length === 0) {
-                statusBar.className = 'status-bar waiting';
-                statusBar.innerHTML = '⏳ No active signals. AI is monitoring...';
-                container.innerHTML = `<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">No Active Signals</div><div class="empty-subtext">The AI is scanning markets 24/7.</div></div>`;
+                status.innerHTML = '⏳ No high-confluence setups right now.';
+                container.innerHTML = '<div class="loading">AI is scanning 15 markets across 3 timeframes...</div>';
                 return;
             }
             
-            statusBar.className = 'status-bar';
-            statusBar.innerHTML = `✅ ${signals.length} Active Signal${signals.length > 1 ? 's' : ''}`;
-            
+            status.innerHTML = `✅ ${signals.length} Active Setups Found`;
             let html = '';
-            signals.forEach(signal => {
-                const isBuy = signal.direction === 'BUY';
-                const rr = ((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2);
-                const tvSymbol = tvMap[signal.pair] || signal.pair;
+            
+            signals.forEach((s, index) => {
+                const isBuy = s.main_direction === 'BUY';
+                const tvSymbol = tvMap[s.pair] || s.pair;
                 
+                // Build Timeframe Matrix
+                let tfHtml = '';
+                ['M15', 'H1', 'H4'].forEach(tf => {
+                    const setup = s.setups.find(x => x.timeframe === tf);
+                    let dir = '—', dirClass = 'neutral', rsi = '';
+                    if (setup) {
+                        dir = setup.direction;
+                        dirClass = setup.direction.toLowerCase();
+                        rsi = `RSI:${setup.rsi}`;
+                    }
+                    tfHtml += `<div class="tf-box"><div class="tf-name">${tf}</div><div class="tf-dir ${dirClass}">${dir}</div><div class="tf-name">${rsi}</div></div>`;
+                });
+
                 html += `
-                    <div class="signal-card">
-                        <div class="signal-header">
-                            <div class="pair-name">${signal.pair}</div>
-                            <div class="signal-badge ${isBuy ? 'buy' : 'sell'}">${signal.direction}</div>
+                    <div class="card" id="card-${index}">
+                        <div class="card-header">
+                            <div class="pair">${s.pair}</div>
+                            <div class="badge ${isBuy ? 'buy' : 'sell'}">${s.main_direction}</div>
                         </div>
                         
-                        <div class="price-row"><div class="price-label">Entry Price</div><div class="price-value entry">${signal.entry}</div></div>
-                        <div class="price-row"><div class="price-label">Stop Loss</div><div class="price-value sl">${signal.stopLoss}</div></div>
-                        <div class="price-row"><div class="price-label">Take Profit</div><div class="price-value tp">${signal.takeProfit}</div></div>
+                        <div class="timer-bar"><div class="timer-fill" id="fill-${index}"></div></div>
+                        <div class="timer-text">Expires in <span id="time-${index}">15:00</span></div>
                         
-                        <div class="stats-grid">
-                            <div class="stat-box"><div class="stat-label">RSI</div><div class="stat-value">${signal.rsi}</div></div>
-                            <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value">${signal.confidence}%</div></div>
-                            <div class="stat-box"><div class="stat-label">Risk:Reward</div><div class="stat-value">1:${rr}</div></div>
-                            <div class="stat-box"><div class="stat-label">Timeframe</div><div class="stat-value">${signal.timeframe}</div></div>
+                        <div class="tf-matrix">${tfHtml}</div>
+                        
+                        <div class="prices">
+                            <div class="price-col"><div class="price-label">Entry</div><div class="price-val" style="color:#FFD700">${s.entry}</div></div>
+                            <div class="price-col"><div class="price-label">Stop Loss</div><div class="price-val" style="color:#FF1744">${s.stopLoss}</div></div>
+                            <div class="price-col"><div class="price-label">Take Profit</div><div class="price-val" style="color:#00C853">${s.takeProfit}</div></div>
                         </div>
                         
-                        <div class="strategy-info">
-                            <div class="strategy-title">🧠 AI Analysis - ${signal.strategy}</div>
-                            <div class="strategy-text">${signal.learnMode}</div>
-                        </div>
-                        
-                        <a href="https://www.tradingview.com/chart/?symbol=${tvSymbol}" target="_blank" class="tv-button">📊 View Live TradingView Chart</a>
+                        <a href="https://www.tradingview.com/chart/?symbol=${tvSymbol}" target="_blank" class="tv-btn">📊 View Live Chart</a>
                     </div>
                 `;
             });
             container.innerHTML = html;
+            startTimers(signals);
         }
-        
+
+        function startTimers(signals) {
+            signals.forEach((s, index) => {
+                const expiresAt = new Date();
+                expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 min timer
+                
+                const interval = setInterval(() => {
+                    const now = new Date();
+                    const diff = expiresAt - now;
+                    
+                    if (diff <= 0) {
+                        clearInterval(interval);
+                        const card = document.getElementById(`card-${index}`);
+                        if (card) card.style.opacity = '0.2'; // Fade out expired signals
+                        document.getElementById(`time-${index}`).innerText = "EXPIRED";
+                        document.getElementById(`fill-${index}`).style.width = "0%";
+                        return;
+                    }
+                    
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    document.getElementById(`time-${index}`).innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    document.getElementById(`fill-${index}`).style.width = `${(diff / 900000) * 100}%`;
+                }, 1000);
+            });
+        }
+
         fetchSignals();
-        setInterval(fetchSignals, 60000);
+        setInterval(fetchSignals, 60000); // Refresh data every minute
     </script>
 </body>
 </html>
