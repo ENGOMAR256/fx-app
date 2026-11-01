@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <title>FX PRO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 900;
+            color: #FFD700;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 11px;
+            color: #666;
+            letter-spacing: 3px;
+            margin-top: 5px;
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            background: rgba(0, 200, 83, 0.1);
+            border: 1px solid rgba(0, 200, 83, 0.3);
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #00C853;
+            margin: 15px;
+            border-radius: 8px;
+        }
+        
+        .status-bar.waiting {
+            background: rgba(255, 165, 0, 0.1);
+            border-color: rgba(255, 165, 0, 0.3);
+            color: #FFA500;
+        }
+        
+        /* Signal Cards */
+        .signal-card {
+            background: #141414;
+            border: 1px solid #333;
+            border-radius: 12px;
+            margin: 15px;
+            padding: 20px;
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .pair-name {
+            font-size: 24px;
+            font-weight: 900;
+            color: #FFD700;
+        }
+        
+        .signal-badge {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        
+        .signal-badge.buy {
+            background: #00C853;
+            color: #000;
+        }
+        
+        .signal-badge.sell {
+            background: #FF1744;
+            color: #fff;
+        }
+        
+        /* Price Levels */
+        .price-levels {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #0a0a0a;
+            border-radius: 8px;
+        }
+        
+        .price-label {
+            font-size: 12px;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .price-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .price-value.entry {
+            color: #FFD700;
+        }
+        
+        .price-value.sl {
+            color: #FF1744;
+        }
+        
+        .price-value.tp {
+            color: #00C853;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            background: #0a0a0a;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        /* Strategy Info */
+        .strategy-info {
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .strategy-title {
+            font-size: 11px;
+            color: #FFD700;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .strategy-text {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .empty-subtext {
+            font-size: 13px;
+            color: #444;
+        }
+        
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #141414;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            text-align: center;
+            color: #666;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 15px;
+        }
+        
+        .nav-item.active {
+            color: #FFD700;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 3px;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #FFD700;
+        }
+        
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #FFD700;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">FX PRO</div>
+        <div class="subtitle">PROFESSIONAL TRADING</div>
+    </div>
+    
+    <div id="statusBar" class="status-bar waiting">
+        ⏳ Scanning markets...
+    </div>
+    
+    <div id="signalsContainer">
+        <div class="loading">
+            <div class="spinner"></div>
+            <div>Loading signals...</div>
+        </div>
+    </div>
+    
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <div class="nav-icon">📊</div>
+            <div>Signals</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">📈</div>
+            <div>Charts</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">⚙️</div>
+            <div>Settings</div>
+        </div>
+    </div>
+
+    <script>
+        // Simulated signals (replace with real API calls to your backend)
+        const signals = [
+            {
+                pair: 'EURUSD',
+                direction: 'BUY',
+                entry: 1.11574,
+                stopLoss: 1.11450,
+                takeProfit: 1.11822,
+                rsi: 41.81,
+                confidence: 78,
+                strategy: 'Multi-TF Confluence',
+                learnMode: 'Trend alignment confirmed across multiple timeframes. RSI showing momentum shift. Volume confirmation present.'
+            }
+        ];
+        
+        function renderSignals() {
+            const container = document.getElementById('signalsContainer');
+            const statusBar = document.getElementById('statusBar');
+            
+            if (signals.length === 0) {
+                statusBar.className = 'status-bar waiting';
+                statusBar.innerHTML = '⏳ No active signals. AI is monitoring...';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📡</div>
+                        <div class="empty-text">No Active Signals</div>
+                        <div class="empty-subtext">The AI is scanning markets 24/7. You'll be notified when a high-probability setup forms.</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            statusBar.className = 'status-bar';
+            statusBar.innerHTML = `✅ ${signals.length} Active Signal${signals.length > 1 ? 's' : ''}`;
+            
+            let html = '';
+            signals.forEach(signal => {
+                const isBuy = signal.direction === 'BUY';
+                const rr = ((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2);
+                
+                html += `
+                    <div class="signal-card">
+                        <div class="signal-header">
+                            <div class="pair-name">${signal.pair}</div>
+                            <div class="signal-badge ${isBuy ? 'buy' : 'sell'}">${signal.direction}</div>
+                        </div>
+                        
+                        <div class="price-levels">
+                            <div class="price-row">
+                                <div class="price-label">Entry Price</div>
+                                <div class="price-value entry">${signal.entry}</div>
+                            </div>
+                            <div class="price-row">
+                                <div class="price-label">Stop Loss</div>
+                                <div class="price-value sl">${signal.stopLoss}</div>
+                            </div>
+                            <div class="price-row">
+                                <div class="price-label">Take Profit</div>
+                                <div class="price-value tp">${signal.takeProfit}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <div class="stat-label">RSI</div>
+                                <div class="stat-value">${signal.rsi}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Confidence</div>
+                                <div class="stat-value">${signal.confidence}%</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Risk:Reward</div>
+                                <div class="stat-value">1:${rr}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Timeframe</div>
+                                <div class="stat-value">H1</div>
+                            </div>
+                        </div>
+                        
+                        <div class="strategy-info">
+                            <div class="strategy-title">🧠 AI Analysis</div>
+                            <div class="strategy-text">${signal.learnMode}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Initialize
+        renderSignals();
+        
+        // Simulate real-time updates (replace with WebSocket or polling to your backend)
+        setInterval(() => {
+            console.log('Checking for new signals...');
+        }, 30000);
+    </script>
+</body>
+</html>
