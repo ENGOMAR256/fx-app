@@ -338,7 +338,7 @@
         // Fetch real signals from backend
         async function fetchSignals() {
             try {
-                const response = await fetch('https://your-backend-url.herokuapp.com/signals');
+                const response = await fetch('https://fx-app-2.onrender.com/signals');
                 const signals = await response.json();
                 renderSignals(signals);
             } catch (error) {
