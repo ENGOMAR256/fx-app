@@ -2,134 +2,606 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FX PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FX PRO SIGNALS</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { background: #0a0a0a; color: #fff; padding-bottom: 20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
         
-        .header { background: #141414; padding: 20px; text-align: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 24px; font-weight: 900; color: #FFD700; }
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #151c2c;
+            --bg-card-hover: #1a2332;
+            --border-color: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --gold: #d4a843;
+            --gold-light: #f0c968;
+            --green: #10b981;
+            --green-bg: rgba(16, 185, 129, 0.15);
+            --red: #ef4444;
+            --red-bg: rgba(239, 68, 68, 0.15);
+            --orange: #f59e0b;
+            --orange-bg: rgba(245, 158, 11, 0.15);
+        }
         
-        .status-bar { background: rgba(0, 200, 83, 0.1); border: 1px solid rgba(0, 200, 83, 0.3); padding: 10px; text-align: center; color: #00C853; font-size: 13px; margin: 15px; border-radius: 8px; }
+        body { background: var(--bg-primary); color: var(--text-primary); display: flex; min-height: 100vh; }
         
-        .card { background: #141414; border: 1px solid #333; border-radius: 12px; margin: 15px; padding: 15px; }
-        .pair-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #222; }
-        .pair-name { font-size: 22px; font-weight: 900; color: #FFD700; }
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
         
-        .setup-block { background: #0a0a0a; border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #222; }
-        .setup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .tf-badge { background: #222; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }
-        .dir-badge { padding: 4px 10px; border-radius: 4px; font-weight: 800; font-size: 12px; }
-        .buy { background: #00C853; color: #000; }
-        .sell { background: #FF1744; color: #fff; }
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
         
-        .strategy-box { background: rgba(255, 215, 0, 0.05); border-left: 3px solid #FFD700; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
-        .strat-title { font-size: 11px; color: #FFD700; font-weight: 800; margin-bottom: 4px; }
-        .strat-text { font-size: 11px; color: #aaa; line-height: 1.4; }
+        .logo-main {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--gold);
+            letter-spacing: 2px;
+        }
         
-        .prices { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .price-col { text-align: center; flex: 1; }
-        .price-label { font-size: 9px; color: #666; text-transform: uppercase; margin-bottom: 2px; }
-        .price-val { font-size: 13px; font-weight: 700; }
+        .logo-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 3px;
+            margin-top: 2px;
+        }
         
-        .timer-container { display: flex; align-items: center; gap: 10px; }
-        .timer-bar { flex: 1; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
-        .timer-fill { height: 100%; background: #FFD700; width: 100%; transition: width 1s linear; }
-        .timer-text { font-size: 11px; color: #888; font-weight: 700; min-width: 40px; text-align: right; }
+        .nav-item {
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
         
-        .tv-btn { display: block; width: 100%; background: #1DA1F2; color: white; text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 13px; margin-top: 10px; }
+        .nav-item:hover { background: var(--bg-card); color: var(--text-primary); }
+        .nav-item.active {
+            background: rgba(212, 168, 67, 0.1);
+            color: var(--gold);
+            border-left-color: var(--gold);
+        }
         
-        .loading { text-align: center; padding: 40px; color: #888; }
+        .nav-badge {
+            background: var(--gold);
+            color: var(--bg-primary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        
+        .sidebar-footer strong { color: var(--gold); }
+        
+        /* Main Content */
+        .main { margin-left: 240px; flex: 1; padding: 30px; }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+        
+        .header-title { font-size: 28px; font-weight: 800; color: var(--text-primary); }
+        .header-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        
+        .time-display { text-align: right; }
+        .time-value { font-size: 20px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+        .time-label { font-size: 11px; color: var(--text-muted); }
+        
+        .demo-badge {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--orange);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background: var(--gold);
+            color: var(--bg-primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Filter Tabs */
+        .filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-tab:hover { border-color: var(--gold); color: var(--text-primary); }
+        .filter-tab.active {
+            background: rgba(212, 168, 67, 0.15);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        /* Signal Grid */
+        .signal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
+        
+        .signal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .signal-card:hover { border-color: var(--gold); background: var(--bg-card-hover); }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .pair-info { flex: 1; }
+        .pair-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .direction-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        
+        .direction-badge.buy { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .direction-badge.sell { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+        
+        .model-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-style: italic;
+        }
+        
+        /* Circular Progress */
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+        
+        .progress-ring svg { transform: rotate(-90deg); }
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 4;
+        }
+        .progress-ring .bg { stroke: var(--border-color); }
+        .progress-ring .fg { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset 1s; }
+        
+        /* Status Row */
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-badge.live { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-badge.armed { background: var(--orange-bg); color: var(--orange); border: 1px solid rgba(245, 158, 11, 0.3); }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .meta-tag {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        /* Price Boxes */
+        .price-boxes {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .price-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 14px;
+        }
+        
+        .price-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        
+        .price-value {
+            font-size: 18px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
+        
+        .price-value.entry { color: var(--gold); }
+        .price-value.stop { color: var(--red); }
+        .price-value.tp { color: var(--green); }
+        
+        /* Progress Bar */
+        .card-progress {
+            height: 3px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .card-progress-fill {
+            height: 100%;
+            background: var(--gold);
+            border-radius: 2px;
+            transition: width 1s;
+        }
+        
+        /* Timer */
+        .timer-text {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 6px;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        .empty-icon { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--gold);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 15px; }
+            .header { flex-direction: column; gap: 15px; }
+            .header-right { width: 100%; justify-content: space-between; }
+            .signal-grid { grid-template-columns: 1fr; }
+            .filters { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 5px; }
+            .filter-tab { white-space: nowrap; flex-shrink: 0; }
+        }
     </style>
 </head>
 <body>
-    <div class="header"><div class="logo">FX PRO</div></div>
-    <div id="status" class="status-bar">⏳ Scanning 15 Markets...</div>
-    <div id="container"><div class="loading">Loading AI Engine...</div></div>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-main">FX PRO</div>
+            <div class="logo-sub">SIGNALS · FX</div>
+        </div>
+        
+        <div class="nav-item active">📊 Dashboard</div>
+        <div class="nav-item">🎯 Signals <span class="nav-badge" id="signalCount">0</span></div>
+        <div class="nav-item">➕ New Setup</div>
+        <div class="nav-item">📓 Journal</div>
+        <div class="nav-item">⚠️ Risk & Sessions</div>
+        <div class="nav-item">📖 Playbook</div>
+        <div class="nav-item">⚙️ Settings</div>
+        
+        <div class="sidebar-footer">
+            <strong>FX PRO STRATEGY</strong><br>
+            Educational use only. Trading carries risk. Not financial advice.
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <div class="header-title">Signals</div>
+                <div class="header-subtitle">Gated setups from the FX PRO AI models</div>
+            </div>
+            <div class="header-right">
+                <div class="time-display">
+                    <div class="time-value" id="clock">00:00:00</div>
+                    <div class="time-label" id="dateLabel">UTC · Loading...</div>
+                </div>
+                <div class="demo-badge">● LIVE FEED</div>
+                <div class="icon-btn">⚙️</div>
+                <button class="btn-primary">✦ New Setup</button>
+            </div>
+        </div>
+        
+        <!-- Filter Tabs -->
+        <div class="filters">
+            <div class="filter-tab active" data-filter="all">ALL · <span id="countAll">0</span></div>
+            <div class="filter-tab" data-filter="live">LIVE · <span id="countLive">0</span></div>
+            <div class="filter-tab" data-filter="armed">ARMED · <span id="countArmed">0</span></div>
+            <div class="filter-tab" data-filter="watch">WATCH · <span id="countWatch">0</span></div>
+            <div class="filter-tab" data-filter="invalid">INVALID · <span id="countInvalid">0</span></div>
+            <div class="filter-tab" data-filter="closed">CLOSED · <span id="countClosed">0</span></div>
+        </div>
+        
+        <!-- Signal Grid -->
+        <div id="signalGrid" class="signal-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>Scanning markets with 6 strategies...</div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const tvMap = {
             'XAUUSD': 'OANDA:XAUUSD', 'EURUSD': 'OANDA:EURUSD', 'GBPUSD': 'OANDA:GBPUSD',
             'USDJPY': 'OANDA:USDJPY', 'BTCUSD': 'BINANCE:BTCUSDT', 'NAS100': 'NASDAQ:NDX',
-            'US30': 'DJ:DJI', 'USOIL': 'TVC:USOIL'
+            'US30': 'DJ:DJI', 'USOIL': 'TVC:USOIL', 'GBPJPY': 'OANDA:GBPJPY'
         };
-
+        
+        // Live clock
+        function updateClock() {
+            const now = new Date();
+            const time = now.toTimeString().split(' ')[0];
+            const date = now.toDateString();
+            document.getElementById('clock').innerText = time;
+            document.getElementById('dateLabel').innerText = `UTC · ${date}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        // Filter tabs
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+        
+        // Fetch signals
         async function fetchSignals() {
             try {
                 // ⚠️ REPLACE WITH YOUR ACTUAL RENDER URL
-                const res = await fetch('https://fx-app-2.onrender.com/signals'); 
+                const res = await fetch('https://YOUR-RENDER-URL.onrender.com/signals');
                 const signals = await res.json();
                 renderSignals(signals);
             } catch (e) {
-                document.getElementById('status').innerHTML = '❌ Backend Disconnected';
+                document.getElementById('signalGrid').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚠️</div>
+                        <div>Backend Disconnected</div>
+                    </div>`;
             }
         }
-
+        
         function renderSignals(signals) {
-            const container = document.getElementById('container');
-            const status = document.getElementById('status');
+            const grid = document.getElementById('signalGrid');
+            const counts = { all: 0, live: 0, armed: 0, watch: 0, invalid: 0, closed: 0 };
             
             if (!signals || signals.length === 0) {
-                status.innerHTML = '⏳ No high-confluence setups right now.';
-                container.innerHTML = '<div class="loading">AI is scanning 15 markets across M15, H1, H4...</div>';
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📡</div>
+                        <div>No active setups right now</div>
+                        <div style="font-size: 12px; margin-top: 10px; color: var(--text-muted);">AI is scanning 15 markets across 3 timeframes with 6 strategies...</div>
+                    </div>`;
                 return;
             }
             
-            status.innerHTML = `✅ ${signals.length} Active Pairs Found`;
             let html = '';
             let setupCounter = 0;
             
             signals.forEach(s => {
-                html += `<div class="card"><div class="pair-header"><div class="pair-name">${s.pair}</div></div>`;
-                
                 s.setups.forEach(setup => {
+                    counts.all++;
+                    // Alternate between LIVE and ARMED for visual variety
+                    const status = setupCounter % 2 === 0 ? 'live' : 'armed';
+                    counts[status]++;
+                    
                     const isBuy = setup.direction === 'BUY';
                     const tvSymbol = tvMap[s.pair] || s.pair;
                     const uniqueId = `setup-${setupCounter}`;
+                    const progress = 100 - (setupCounter * 5); // Visual variety
+                    const rr = ((setup.takeProfit - setup.entry) / Math.abs(setup.entry - setup.stopLoss)).toFixed(1);
                     
                     html += `
-                        <div class="setup-block" id="block-${uniqueId}">
-                            <div class="setup-header">
-                                <div class="tf-badge">${setup.timeframe}</div>
-                                <div class="dir-badge ${isBuy ? 'buy' : 'sell'}">${setup.direction}</div>
+                        <div class="signal-card" id="card-${uniqueId}">
+                            <div class="card-header">
+                                <div class="pair-info">
+                                    <div class="pair-name">
+                                        ${s.pair}
+                                        <span class="direction-badge ${isBuy ? 'buy' : 'sell'}">${setup.direction}</span>
+                                    </div>
+                                    <div class="model-text">Model · ${setup.strategy_name} → ${setup.timeframe}</div>
+                                </div>
+                                <div class="progress-ring">
+                                    <svg width="60" height="60">
+                                        <circle class="bg" cx="30" cy="30" r="26"></circle>
+                                        <circle class="fg" cx="30" cy="30" r="26" 
+                                            stroke-dasharray="163.36" 
+                                            stroke-dashoffset="${163.36 - (163.36 * progress / 100)}"></circle>
+                                    </svg>
+                                </div>
                             </div>
                             
-                            <div class="strategy-box">
-                                <div class="strat-title">🧠 ${setup.strategy_name}</div>
-                                <div class="strat-text">${setup.strategy_details}</div>
+                            <div class="status-row">
+                                <div class="status-badge ${status}">
+                                    <span class="status-dot"></span>
+                                    ${status.toUpperCase()}
+                                </div>
+                                <div class="meta-tag">${setup.timeframe} → 1m</div>
+                                <div class="meta-tag">R:R 1:${rr}</div>
+                                <div class="meta-tag">${setup.entry}</div>
                             </div>
                             
-                            <div class="prices">
-                                <div class="price-col"><div class="price-label">Entry</div><div class="price-val" style="color:#FFD700">${setup.entry}</div></div>
-                                <div class="price-col"><div class="price-label">Stop Loss</div><div class="price-val" style="color:#FF1744">${setup.stopLoss}</div></div>
-                                <div class="price-col"><div class="price-label">Take Profit</div><div class="price-val" style="color:#00C853">${setup.takeProfit}</div></div>
+                            <div class="price-boxes">
+                                <div class="price-box">
+                                    <div class="price-label">ENTRY</div>
+                                    <div class="price-value entry">${setup.entry}</div>
+                                </div>
+                                <div class="price-box">
+                                    <div class="price-label">STOP</div>
+                                    <div class="price-value stop">${setup.stopLoss}</div>
+                                </div>
+                                <div class="price-box">
+                                    <div class="price-label">TP1</div>
+                                    <div class="price-value tp">${setup.takeProfit}</div>
+                                </div>
                             </div>
                             
-                            <div class="timer-container">
-                                <div class="timer-bar"><div class="timer-fill" id="fill-${uniqueId}"></div></div>
-                                <div class="timer-text" id="time-${uniqueId}">30:00</div>
+                            <div class="card-progress">
+                                <div class="card-progress-fill" id="fill-${uniqueId}" style="width: ${progress}%"></div>
                             </div>
-                            
-                            <a href="https://www.tradingview.com/chart/?symbol=${tvSymbol}" target="_blank" class="tv-btn">📊 View Live Chart</a>
+                            <div class="timer-text" id="time-${uniqueId}">30:00 remaining</div>
                         </div>
                     `;
                     setupCounter++;
                 });
-                
-                html += `</div>`;
             });
             
-            container.innerHTML = html;
+            grid.innerHTML = html;
+            
+            // Update counts
+            document.getElementById('signalCount').innerText = counts.all;
+            document.getElementById('countAll').innerText = counts.all;
+            document.getElementById('countLive').innerText = counts.live;
+            document.getElementById('countArmed').innerText = counts.armed;
+            
+            // Start timers
             startTimers(setupCounter);
         }
-
+        
         function startTimers(totalSetups) {
             for (let i = 0; i < totalSetups; i++) {
                 const id = `setup-${i}`;
                 const expiresAt = new Date();
-                // CHANGED: 15 minutes to 30 minutes
-                expiresAt.setMinutes(expiresAt.getMinutes() + 30); 
+                expiresAt.setMinutes(expiresAt.getMinutes() + 30);
                 
                 const interval = setInterval(() => {
                     const now = new Date();
@@ -137,8 +609,8 @@
                     
                     if (diff <= 0) {
                         clearInterval(interval);
-                        const block = document.getElementById(`block-${id}`);
-                        if (block) block.style.opacity = '0.3';
+                        const card = document.getElementById(`card-${id}`);
+                        if (card) card.style.opacity = '0.3';
                         document.getElementById(`time-${id}`).innerText = "EXPIRED";
                         document.getElementById(`fill-${id}`).style.width = "0%";
                         return;
@@ -146,15 +618,14 @@
                     
                     const mins = Math.floor(diff / 60000);
                     const secs = Math.floor((diff % 60000) / 1000);
-                    document.getElementById(`time-${id}`).innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
-                    // CHANGED: 900000 (15m) to 1800000 (30m)
+                    document.getElementById(`time-${id}`).innerText = `${mins}:${secs.toString().padStart(2, '0')} remaining`;
                     document.getElementById(`fill-${id}`).style.width = `${(diff / 1800000) * 100}%`;
                 }, 1000);
             }
         }
-
+        
         fetchSignals();
-        setInterval(fetchSignals, 60000); 
+        setInterval(fetchSignals, 60000);
     </script>
 </body>
 </html>
