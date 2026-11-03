@@ -35,40 +35,38 @@ class Signal(BaseModel):
     setups: List[Setup]
 
 def calculate_indicators(df):
-    # RSI
     delta = df['Close'].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
     
-    # EMAs
     df['EMA_50'] = df['Close'].ewm(span=50, adjust=False).mean()
     df['EMA_200'] = df['Close'].ewm(span=200, adjust=False).mean()
     
-    # ATR
     high_low = df['High'] - df['Low']
     high_close = (df['High'] - df['Close'].shift()).abs()
     low_close = (df['Low'] - df['Close'].shift()).abs()
     tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
     df['ATR'] = tr.rolling(14).mean()
     
-    # Volume & Breakout levels
     df['Vol_SMA'] = df['Volume'].rolling(20).mean()
     df['High_20'] = df['High'].rolling(20).max()
     df['Low_20'] = df['Low'].rolling(20).min()
+    
+    # For Supply/Demand: Calculate average body size to find imbalances
+    df['Body_Size'] = (df['Close'] - df['Open']).abs()
+    df['Avg_Body'] = df['Body_Size'].rolling(20).mean()
     
     return df
 
 def get_setups(pair, symbol, tf):
     try:
-        # Fetch 3 months to ensure 200 EMA calculates correctly
         df = yf.Ticker(symbol).history(period="3mo", interval=tf)
         if df.empty or len(df) < 200: return []
         
         df = calculate_indicators(df)
         
-        # Use the last fully closed candle for accurate signals
         last = df.iloc[-2] 
         prev = df.iloc[-3]
         
@@ -80,80 +78,105 @@ def get_setups(pair, symbol, tf):
         setups = []
         
         # ==========================================
-        # STRATEGY 1: SMC / Liquidity Grab (Mean Reversion)
+        # 1. SMC / Liquidity Grab
         # ==========================================
         if current_rsi < 30:
-            setups.append(Setup(
-                timeframe=tf.upper(), direction="BUY", 
-                entry=round(current_price, decimals),
-                stopLoss=round(current_price - (atr * 1.5), decimals),
-                takeProfit=round(current_price + (atr * 3), decimals),
-                rsi=round(current_rsi, 1),
-                strategy_name="SMC / Liquidity Grab",
-                strategy_logic="RSI < 30. Price swept liquidity and is oversold. Expecting a sharp bounce."
-            ))
+            setups.append(Setup(timeframe=tf.upper(), direction="BUY", entry=round(current_price, decimals),
+                stopLoss=round(current_price - (atr * 1.5), decimals), takeProfit=round(current_price + (atr * 3), decimals),
+                rsi=round(current_rsi, 1), strategy_name="SMC / Liquidity Grab",
+                strategy_logic="RSI < 30. Price swept liquidity and is oversold. Expecting a sharp bounce."))
         elif current_rsi > 70:
-            setups.append(Setup(
-                timeframe=tf.upper(), direction="SELL", 
-                entry=round(current_price, decimals),
-                stopLoss=round(current_price + (atr * 1.5), decimals),
-                takeProfit=round(current_price - (atr * 3), decimals),
-                rsi=round(current_rsi, 1),
-                strategy_name="SMC / Liquidity Grab",
-                strategy_logic="RSI > 70. Price rejected from supply and is overbought. Expecting a pullback."
-            ))
+            setups.append(Setup(timeframe=tf.upper(), direction="SELL", entry=round(current_price, decimals),
+                stopLoss=round(current_price + (atr * 1.5), decimals), takeProfit=round(current_price - (atr * 3), decimals),
+                rsi=round(current_rsi, 1), strategy_name="SMC / Liquidity Grab",
+                strategy_logic="RSI > 70. Price rejected from supply and is overbought. Expecting a pullback."))
 
         # ==========================================
-        # STRATEGY 2: Trend Following (EMA Pullback)
+        # 2. Trend Following (EMA Pullback)
         # ==========================================
-        # Bullish Trend Pullback
         if last['EMA_50'] > last['EMA_200'] and current_price > last['EMA_50'] and last['Low'] <= last['EMA_50'] * 1.002:
-            setups.append(Setup(
-                timeframe=tf.upper(), direction="BUY", 
-                entry=round(current_price, decimals),
-                stopLoss=round(last['EMA_200'], decimals),
-                takeProfit=round(current_price + (atr * 2), decimals),
-                rsi=round(current_rsi, 1),
-                strategy_name="Trend Following (Pullback)",
-                strategy_logic="Strong Uptrend (EMA 50 > 200). Price pulled back to the 50 EMA dynamic support."
-            ))
-        # Bearish Trend Pullback
+            setups.append(Setup(timeframe=tf.upper(), direction="BUY", entry=round(current_price, decimals),
+                stopLoss=round(last['EMA_200'], decimals), takeProfit=round(current_price + (atr * 2), decimals),
+                rsi=round(current_rsi, 1), strategy_name="Trend Following",
+                strategy_logic="Strong Uptrend. Price pulled back to the 50 EMA dynamic support."))
         elif last['EMA_50'] < last['EMA_200'] and current_price < last['EMA_50'] and last['High'] >= last['EMA_50'] * 0.998:
-            setups.append(Setup(
-                timeframe=tf.upper(), direction="SELL", 
-                entry=round(current_price, decimals),
-                stopLoss=round(last['EMA_200'], decimals),
-                takeProfit=round(current_price - (atr * 2), decimals),
-                rsi=round(current_rsi, 1),
-                strategy_name="Trend Following (Pullback)",
-                strategy_logic="Strong Downtrend (EMA 50 < 200). Price pulled back to the 50 EMA dynamic resistance."
-            ))
+            setups.append(Setup(timeframe=tf.upper(), direction="SELL", entry=round(current_price, decimals),
+                stopLoss=round(last['EMA_200'], decimals), takeProfit=round(current_price - (atr * 2), decimals),
+                rsi=round(current_rsi, 1), strategy_name="Trend Following",
+                strategy_logic="Strong Downtrend. Price pulled back to the 50 EMA dynamic resistance."))
 
         # ==========================================
-        # STRATEGY 3: Momentum Breakout
+        # 3. Momentum Breakout
         # ==========================================
-        # Bullish Breakout
         if current_price > prev['High_20'] and last['Volume'] > last['Vol_SMA'] * 1.2:
-            setups.append(Setup(
-                timeframe=tf.upper(), direction="BUY", 
-                entry=round(current_price, decimals),
-                stopLoss=round(current_price - (atr * 1.5), decimals),
-                takeProfit=round(current_price + (atr * 3), decimals),
-                rsi=round(current_rsi, 1),
-                strategy_name="Momentum Breakout",
-                strategy_logic="Price broke 20-period high with high volume. Strong bullish momentum."
-            ))
-        # Bearish Breakout
+            setups.append(Setup(timeframe=tf.upper(), direction="BUY", entry=round(current_price, decimals),
+                stopLoss=round(current_price - (atr * 1.5), decimals), takeProfit=round(current_price + (atr * 3), decimals),
+                rsi=round(current_rsi, 1), strategy_name="Momentum Breakout",
+                strategy_logic="Price broke 20-period high with high volume. Strong bullish momentum."))
         elif current_price < prev['Low_20'] and last['Volume'] > last['Vol_SMA'] * 1.2:
-            setups.append(Setup(
-                timeframe=tf.upper(), direction="SELL", 
-                entry=round(current_price, decimals),
-                stopLoss=round(current_price + (atr * 1.5), decimals),
-                takeProfit=round(current_price - (atr * 3), decimals),
-                rsi=round(current_rsi, 1),
-                strategy_name="Momentum Breakout",
-                strategy_logic="Price broke 20-period low with high volume. Strong bearish momentum."
-            ))
+            setups.append(Setup(timeframe=tf.upper(), direction="SELL", entry=round(current_price, decimals),
+                stopLoss=round(current_price + (atr * 1.5), decimals), takeProfit=round(current_price - (atr * 3), decimals),
+                rsi=round(current_rsi, 1), strategy_name="Momentum Breakout",
+                strategy_logic="Price broke 20-period low with high volume. Strong bearish momentum."))
+
+        # ==========================================
+        # 4. Supply & Demand Zones (Imbalance Retest)
+        # ==========================================
+        # Bullish Demand Zone Retest
+        if prev['Body_Size'] > prev['Avg_Body'] * 1.5 and prev['Close'] > prev['Open']:
+            demand_zone_top = prev['Close']
+            demand_zone_bottom = prev['Open']
+            if current_price >= demand_zone_bottom and current_price <= demand_zone_top * 1.002:
+                setups.append(Setup(timeframe=tf.upper(), direction="BUY", entry=round(current_price, decimals),
+                    stopLoss=round(demand_zone_bottom - (atr * 0.5), decimals), takeProfit=round(current_price + (atr * 2.5), decimals),
+                    rsi=round(current_rsi, 1), strategy_name="Supply & Demand",
+                    strategy_logic="Price returned to a high-volume Demand Zone (imbalance). Expecting institutional buying."))
+        # Bearish Supply Zone Retest
+        elif prev['Body_Size'] > prev['Avg_Body'] * 1.5 and prev['Close'] < prev['Open']:
+            supply_zone_bottom = prev['Close']
+            supply_zone_top = prev['Open']
+            if current_price <= supply_zone_top and current_price >= supply_zone_bottom * 0.998:
+                setups.append(Setup(timeframe=tf.upper(), direction="SELL", entry=round(current_price, decimals),
+                    stopLoss=round(supply_zone_top + (atr * 0.5), decimals), takeProfit=round(current_price - (atr * 2.5), decimals),
+                    rsi=round(current_rsi, 1), strategy_name="Supply & Demand",
+                    strategy_logic="Price returned to a high-volume Supply Zone (imbalance). Expecting institutional selling."))
+
+        # ==========================================
+        # 5. Support/Resistance Rejection
+        # ==========================================
+        # Resistance Rejection
+        if last['High'] >= last['High_20'] and last['Close'] < last['High_20'] and last['High'] > last['Close']:
+            setups.append(Setup(timeframe=tf.upper(), direction="SELL", entry=round(current_price, decimals),
+                stopLoss=round(last['High'] + (atr * 0.5), decimals), takeProfit=round(current_price - (atr * 2), decimals),
+                rsi=round(current_rsi, 1), strategy_name="S/R Rejection",
+                strategy_logic="Price hit local Resistance (20-period high) and rejected. Sellers defending the level."))
+        # Support Rejection
+        elif last['Low'] <= last['Low_20'] and last['Close'] > last['Low_20'] and last['Low'] < last['Close']:
+            setups.append(Setup(timeframe=tf.upper(), direction="BUY", entry=round(current_price, decimals),
+                stopLoss=round(last['Low'] - (atr * 0.5), decimals), takeProfit=round(current_price + (atr * 2), decimals),
+                rsi=round(current_rsi, 1), strategy_name="S/R Rejection",
+                strategy_logic="Price hit local Support (20-period low) and rejected. Buyers defending the level."))
+
+        # ==========================================
+        # 6. Price Action (Pin Bar / Wick Rejection)
+        # ==========================================
+        candle_range = last['High'] - last['Low']
+        if candle_range > 0:
+            upper_wick = last['High'] - max(last['Open'], last['Close'])
+            lower_wick = min(last['Open'], last['Close']) - last['Low']
+            
+            # Bullish Pin Bar (Long lower wick)
+            if lower_wick > candle_range * 0.6 and last['Close'] > last['Open']:
+                setups.append(Setup(timeframe=tf.upper(), direction="BUY", entry=round(current_price, decimals),
+                    stopLoss=round(last['Low'] - (atr * 0.5), decimals), takeProfit=round(current_price + (atr * 2), decimals),
+                    rsi=round(current_rsi, 1), strategy_name="Price Action (Pin Bar)",
+                    strategy_logic="Bullish Pin Bar formed. Long lower wick shows strong buyer rejection at lower prices."))
+            # Bearish Pin Bar (Long upper wick)
+            elif upper_wick > candle_range * 0.6 and last['Close'] < last['Open']:
+                setups.append(Setup(timeframe=tf.upper(), direction="SELL", entry=round(current_price, decimals),
+                    stopLoss=round(last['High'] + (atr * 0.5), decimals), takeProfit=round(current_price - (atr * 2), decimals),
+                    rsi=round(current_rsi, 1), strategy_name="Price Action (Pin Bar)",
+                    strategy_logic="Bearish Pin Bar formed. Long upper wick shows strong seller rejection at higher prices."))
 
         return setups
     except Exception as e:
@@ -163,17 +186,14 @@ def get_setups(pair, symbol, tf):
 @app.get("/signals")
 def get_signals():
     final_signals = []
-    
     for pair, symbol in MARKETS.items():
         pair_setups = []
         for tf in TIMEFRAMES:
             setups = get_setups(pair, symbol, tf)
             pair_setups.extend(setups)
-            time.sleep(0.2) # Prevent rate limits
-            
+            time.sleep(0.2) 
         if pair_setups:
             final_signals.append(Signal(pair=pair, setups=pair_setups))
-            
     return final_signals
 
 if __name__ == "__main__":
