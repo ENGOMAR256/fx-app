@@ -10,7 +10,6 @@ import time
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# Expanded Markets
 MARKETS = {
     "EURUSD": "EURUSD=X", "GBPUSD": "GBPUSD=X", "USDJPY": "JPY=X", 
     "AUDUSD": "AUDUSD=X", "USDCAD": "CAD=X", "NZDUSD": "NZDUSD=X",
@@ -28,6 +27,8 @@ class Setup(BaseModel):
     stopLoss: float
     takeProfit: float
     rsi: float
+    strategy_name: str
+    strategy_details: str
 
 class Signal(BaseModel):
     pair: str
@@ -48,7 +49,6 @@ def get_setup(pair, symbol, tf):
         current_rsi = float(rsi.iloc[-1])
         atr = float((df['High'] - df['Low']).rolling(14).mean().iloc[-1])
         
-        # Determine decimals based on price
         decimals = 5 if current_price < 10 else 2
         
         if current_rsi < 30:
@@ -57,7 +57,9 @@ def get_setup(pair, symbol, tf):
                 entry=round(current_price, decimals),
                 stopLoss=round(current_price - (atr * 1.5), decimals),
                 takeProfit=round(current_price + (atr * 3), decimals),
-                rsi=round(current_rsi, 1)
+                rsi=round(current_rsi, 1),
+                strategy_name="RSI Mean Reversion (Oversold)",
+                strategy_details=f"RSI is at {current_rsi:.1f} (Extreme Oversold). Sellers are exhausted. SL is set at 1.5x ATR ({round(atr, decimals)}) to avoid market noise. TP is 2x the risk."
             )
         elif current_rsi > 70:
             return Setup(
@@ -65,7 +67,9 @@ def get_setup(pair, symbol, tf):
                 entry=round(current_price, decimals),
                 stopLoss=round(current_price + (atr * 1.5), decimals),
                 takeProfit=round(current_price - (atr * 3), decimals),
-                rsi=round(current_rsi, 1)
+                rsi=round(current_rsi, 1),
+                strategy_name="RSI Mean Reversion (Overbought)",
+                strategy_details=f"RSI is at {current_rsi:.1f} (Extreme Overbought). Buyers are exhausted. SL is set at 1.5x ATR ({round(atr, decimals)}) to avoid market noise. TP is 2x the risk."
             )
         return None
     except:
@@ -74,18 +78,15 @@ def get_setup(pair, symbol, tf):
 @app.get("/signals")
 def get_signals():
     final_signals = []
-    
     for pair, symbol in MARKETS.items():
         pair_setups = []
         for tf in TIMEFRAMES:
             setup = get_setup(pair, symbol, tf)
             if setup:
                 pair_setups.append(setup)
-            time.sleep(0.1) # Prevent rate limits
-            
+            time.sleep(0.1)
         if pair_setups:
             final_signals.append(Signal(pair=pair, setups=pair_setups))
-            
     return final_signals
 
 if __name__ == "__main__":
