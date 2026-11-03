@@ -17,13 +17,16 @@
         .pair-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #222; }
         .pair-name { font-size: 22px; font-weight: 900; color: #FFD700; }
         
-        /* Individual Setup Block */
         .setup-block { background: #0a0a0a; border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #222; }
         .setup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .tf-badge { background: #222; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }
         .dir-badge { padding: 4px 10px; border-radius: 4px; font-weight: 800; font-size: 12px; }
         .buy { background: #00C853; color: #000; }
         .sell { background: #FF1744; color: #fff; }
+        
+        .strategy-box { background: rgba(255, 215, 0, 0.05); border-left: 3px solid #FFD700; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .strat-title { font-size: 11px; color: #FFD700; font-weight: 800; margin-bottom: 4px; }
+        .strat-text { font-size: 11px; color: #aaa; line-height: 1.4; }
         
         .prices { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .price-col { text-align: center; flex: 1; }
@@ -55,7 +58,7 @@
         async function fetchSignals() {
             try {
                 // ⚠️ REPLACE WITH YOUR ACTUAL RENDER URL
-                const res = await fetch('https://fx-app-2.onrender.com/signals'); 
+                const res = await fetch('https://YOUR-RENDER-URL.onrender.com/signals'); 
                 const signals = await res.json();
                 renderSignals(signals);
             } catch (e) {
@@ -92,6 +95,11 @@
                                 <div class="dir-badge ${isBuy ? 'buy' : 'sell'}">${setup.direction}</div>
                             </div>
                             
+                            <div class="strategy-box">
+                                <div class="strat-title">🧠 ${setup.strategy_name}</div>
+                                <div class="strat-text">${setup.strategy_details}</div>
+                            </div>
+                            
                             <div class="prices">
                                 <div class="price-col"><div class="price-label">Entry</div><div class="price-val" style="color:#FFD700">${setup.entry}</div></div>
                                 <div class="price-col"><div class="price-label">Stop Loss</div><div class="price-val" style="color:#FF1744">${setup.stopLoss}</div></div>
@@ -100,7 +108,7 @@
                             
                             <div class="timer-container">
                                 <div class="timer-bar"><div class="timer-fill" id="fill-${uniqueId}"></div></div>
-                                <div class="timer-text" id="time-${uniqueId}">15:00</div>
+                                <div class="timer-text" id="time-${uniqueId}">30:00</div>
                             </div>
                             
                             <a href="https://www.tradingview.com/chart/?symbol=${tvSymbol}" target="_blank" class="tv-btn">📊 View Live Chart</a>
@@ -120,7 +128,8 @@
             for (let i = 0; i < totalSetups; i++) {
                 const id = `setup-${i}`;
                 const expiresAt = new Date();
-                expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 min timer
+                // CHANGED: 15 minutes to 30 minutes
+                expiresAt.setMinutes(expiresAt.getMinutes() + 30); 
                 
                 const interval = setInterval(() => {
                     const now = new Date();
@@ -138,7 +147,8 @@
                     const mins = Math.floor(diff / 60000);
                     const secs = Math.floor((diff % 60000) / 1000);
                     document.getElementById(`time-${id}`).innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
-                    document.getElementById(`fill-${id}`).style.width = `${(diff / 900000) * 100}%`;
+                    // CHANGED: 900000 (15m) to 1800000 (30m)
+                    document.getElementById(`fill-${id}`).style.width = `${(diff / 1800000) * 100}%`;
                 }, 1000);
             }
         }
